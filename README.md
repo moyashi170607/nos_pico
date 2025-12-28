@@ -1,4 +1,4 @@
-# NOS_PICO
+# nos_pico
 
 Raspberry Pi PicoでNostrの電子署名を行い、Rust経由でリレーサーバーに送信するためのプロジェクトです。
 
