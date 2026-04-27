@@ -1,5 +1,95 @@
 # nos_pico
 
+A project for performing Nostr digital signatures on a Raspberry Pi Pico and sending them to relay servers via Rust.
+
+## Overview
+
+This project aims to perform signing operations securely inside external hardware (RP2040) without ever loading the private key into PC memory.
+
+It is, in essence, a hardware version of NIP-07.
+
+- **Pico (C++):** Receives data over serial communication, performs Schnorr signatures and other digital signing operations, and returns the result.
+- **Host (Rust):** Handles the Nostr protocol, manages serial communication with the Pico, and manages WebSocket communication with relay servers.
+
+## Project Structure
+
+```text
+NOS_PICO
+├── nos_pico_hard/      # Hardware-side Pico SDK (C++) project
+│   ├── nos_pico_hard.cpp  # Main logic (serial wait & processing)
+│   ├── nostr_sign.cpp     # Signature library calls
+│   └── CMakeLists.txt     # Build configuration
+└── nos_pico_rust/      # Host-side (Rust) project
+    ├── src/               # Rust source code
+    └── Cargo.toml         # Dependencies (serialport, tokio-tungstenite, etc.)
+```
+
+## Build Instructions
+
+First clone the repository with `git clone --recursive https://github.com/moyashi170607/nos_pico.git`, then follow the steps below.
+
+### RP2040
+1. Change directory: `cd nos_pico_hard`
+2. Create the config file: `touch config.hpp`
+3. Edit `config.hpp` as follows:
+
+```
+#ifndef CONFIG_NOSTR_KEY
+#define CONFIG_NOSTR_KEY 1
+
+#include <stdint.h>
+
+const char* seckey_hex = "your private key in hex format";
+
+#endif  // !CONFIG_NOSTR_KEY
+```
+
+4. Build using the Pico SDK.
+5. Write the generated `build/nos_pico_hard.uf2` to the Raspberry Pi Pico.
+
+### Host side (Rust)
+1. Change directory: `cd nos_pico_rust`
+2. Build: `cargo build --release`
+3. The executable `target/release/nos_pico_rust.exe` will be generated.
+
+## Usage
+1. Connect the Raspberry Pi Pico flashed with the `nos_pico_hard` firmware.
+2. Create `config.toml` in the same directory as `nos_pico_rust.exe`.
+3. Edit `config.toml` as follows:
+```
+relays = [
+    "wss link of relay server to connect",
+    "wss link of relay server to connect 2",
+    "wss link of relay server to connect 3",
+]
+
+port_name = "name of the port your microcontroller is connected to"
+```
+
+4. Run `nos_pico_rust.exe` in a terminal.
+5. After connecting to relay servers, your public key will be displayed and you will be prompted with `Please enter your post content`.
+6. Enter the content you want to post.
+7. The message will be signed with the private key configured on the microcontroller and sent to the relays.
+8. You can continue posting by entering new content each time.
+
+## Contributing
+Issues and PRs are both welcome.
+
+## Acknowledgements
+This project makes use of various libraries including the Pico SDK, secp256k1 by the Bitcoin Core development team, and various Rust crates.
+We are grateful to their developers and to the Raspberry Pi Foundation.
+
+## License / Disclaimer
+This project is released under the **MIT License**. See `LICENSE` for details.
+
+This project handles Nostr private keys, which require an extremely high level of confidentiality.
+**Use this project at your own risk.**
+The author assumes no responsibility in the event of any key leakage or other incidents.
+
+---
+
+# nos_pico
+
 Raspberry Pi PicoでNostrの電子署名を行い、Rust経由でリレーサーバーに送信するためのプロジェクトです。
 
 ## 概要
